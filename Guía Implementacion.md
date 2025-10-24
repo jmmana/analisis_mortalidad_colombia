@@ -33,6 +33,9 @@ Esta tabla sirve como panel rápido de seguimiento. Edita la casilla de la colum
 
 ---
 
+> Repositorio: https://github.com/jmmana/analisis_mortalidad_colombia.git
+
+
 ## ✨ Resumen ejecutivo (para líderes técnicos)
 
 Documento técnico orientado a ingenieros. Contiene: contrato del sistema, arquitectura de alto nivel (diagramas), requisitos del entorno, esquema de base de datos, guía completa de ETL, estructura de la aplicación Dash/Plotly, contenerización (Docker), CI/CD (GitHub Actions), pruebas, métricas y pautas de despliegue.

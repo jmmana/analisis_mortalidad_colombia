@@ -1,0 +1,27 @@
+version: '3.8'
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mortalidad_db
+      MYSQL_USER: mortalidad_user
+      MYSQL_PASSWORD: mortalidad_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  app:
+    build: .
+    depends_on:
+      - db
+    ports:
+      - "8050:8050"
+    env_file: .env
+    volumes:
+      - ./:/app:cached
+
+volumes:
+  db_data:
