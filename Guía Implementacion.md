@@ -1,7 +1,7 @@
 ---
 # Guía de Implementación (Profesional) 📝
 **Dashboard de Mortalidad — Colombia**
-
+.
 > Versión: 1.0.0  ·  Última actualización: 2025-10-24
 
 [![build](https://img.shields.io/badge/build-pending-lightgrey)](https://github.com/)
