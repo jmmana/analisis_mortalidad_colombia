@@ -1,45 +1,29 @@
 from dash import Dash
-from dash import html, dcc, dash_table
+from dash import html, dcc, dash_table, Output, Input
+import dash_bootstrap_components as dbc
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 import os
 import json
 from sqlalchemy import create_engine, text
+from .layout import layout
 
 
 MENU_ITEMS = [
-    {"path": "/mapa", "label": "Mapa: Muertes por departamento (2019)"},
-    {"path": "/mensual", "label": "Líneas: Muertes por mes (2019)"},
-    {"path": "/violentas", "label": "Barras: Top 5 ciudades violentas (X95)"},
-    {"path": "/baja-mortalidad", "label": "Circular: 10 ciudades con menor mortalidad"},
-    {"path": "/causas", "label": "Tabla: Top 10 causas (código/nombre/total)"},
-    {"path": "/sexo-dpto", "label": "Barras apiladas: Muertes por sexo y dpto"},
-    {"path": "/edad", "label": "Histograma: Distribución por GRUPO_EDAD1"},
+    {"path": "/mapa", "label": "Mapa: Muertes por departamento (2019)", "value": "map"},
+    {"path": "/mensual", "label": "Líneas: Muertes por mes (2019)", "value": "lines"},
+    {"path": "/violentas", "label": "Barras: Top 5 ciudades violentas (X95)", "value": "bars_top5"},
+    {"path": "/baja-mortalidad", "label": "Circular: 10 ciudades con menor mortalidad", "value": "pie_bottom10"},
+    {"path": "/causas", "label": "Tabla: Top 10 causas (código/nombre/total)", "value": "table_top10_causes"},
+    {"path": "/sexo-dpto", "label": "Barras apiladas: Muertes por sexo y dpto", "value": "stacked_sex_dept"},
+    {"path": "/edad", "label": "Histograma: Distribución por GRUPO_EDAD1", "value": "hist_age_groups"},
 ]
 
 
 def get_db_engine():
     db_url = os.getenv('DB_URL', 'mysql+mysqlconnector://mortalidad_user:mortalidad_pass@db:3306/mortalidad_db')
     return create_engine(db_url)
-
-
-def sidebar():
-    links = [
-        html.A(item["label"], href=item["path"], className="nav-link")
-        for item in MENU_ITEMS
-    ]
-    return html.Nav(
-        [html.H3("Menú"), *links],
-        style={
-            'position': 'fixed', 'top': 0, 'left': 0, 'bottom': 0, 'width': '280px',
-            'padding': '20px', 'backgroundColor': '#111827', 'color': 'white', 'overflowY': 'auto'
-        }
-    )
-
-
-def page_container(children):
-    return html.Div(children, style={'marginLeft': '300px', 'padding': '20px'})
 
 
 def ensure_year_filter(query):
@@ -263,46 +247,83 @@ def build_histograma_edad():
     return dcc.Graph(figure=fig)
 
 
-def render_page(pathname: str):
-    if pathname == '/mapa':
-        return [html.H2('Mapa: Muertes por departamento (2019)'), build_map_departamentos()]
-    if pathname == '/mensual':
-        return [html.H2('Muertes por mes (2019)'), build_linea_mensual()]
-    if pathname == '/violentas':
-        return [html.H2('Top 5 ciudades violentas (X95)'), build_top5_ciudades_violentas()]
-    if pathname == '/baja-mortalidad':
-        return [html.H2('10 ciudades con menor mortalidad'), build_pie_10_ciudades_menor_mortalidad()]
-    if pathname == '/causas':
-        return [html.H2('Top 10 causas de muerte'), build_tabla_top_causas()]
-    if pathname == '/sexo-dpto':
-        return [html.H2('Muertes por sexo y departamento'), build_barras_apiladas_sexo_dpto()]
-    if pathname == '/edad':
-        return [html.H2('Distribución por grupos de edad'), build_histograma_edad()]
-    # Página por defecto: resumen básico
-    return [
-        html.H2('Resumen — seleccione un gráfico en el menú'),
-        html.P('Use el menú lateral para navegar por las visualizaciones requeridas.')
-    ]
-
-
 def create_app():
-    app = Dash(__name__, suppress_callback_exceptions=True)
-    app.title = 'Dashboard Mortalidad'
+    app = Dash(__name__, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.FLATLY])
+    app.title = 'Dashboard Mortalidad Colombia'
 
-    app.layout = html.Div([
-        dcc.Location(id='url'),
-        sidebar(),
-        page_container(html.Div(id='page-content'))
-    ])
+    # Usar el layout del módulo layout.py
+    app.layout = layout()
 
+    # Callback para cambiar el contenido según el menú seleccionado
     @app.callback(
-        dcc.Output('page-content', 'children'),
-        dcc.Input('url', 'pathname')
+        [Output('graph_card', 'children'),
+         Output('explanation_card', 'children')],
+        Input('menu', 'value')
     )
-    def _render(pathname):
+    def update_content(menu_value):
         try:
-            return render_page(pathname or '/')
+            if menu_value == 'map':
+                graph = build_map_departamentos()
+                explanation = [
+                    html.H3('📍 Mapa de Mortalidad por Departamento'),
+                    html.P('Este mapa muestra la distribución de muertes por departamento en Colombia durante 2019. '
+                          'Los colores más intensos representan mayor cantidad de fallecimientos.')
+                ]
+            elif menu_value == 'lines':
+                graph = build_linea_mensual()
+                explanation = [
+                    html.H3('📈 Tendencia Mensual'),
+                    html.P('Gráfico de líneas que muestra la evolución de las muertes a lo largo de los meses del 2019. '
+                          'Permite identificar patrones temporales y picos de mortalidad.')
+                ]
+            elif menu_value == 'bars_top5':
+                graph = build_top5_ciudades_violentas()
+                explanation = [
+                    html.H3('⚠️ Ciudades con Mayor Violencia'),
+                    html.P('Top 5 de municipios con más homicidios por arma de fuego (código X95). '
+                          'Estos datos son cruciales para políticas de seguridad pública.')
+                ]
+            elif menu_value == 'pie_bottom10':
+                graph = build_pie_10_ciudades_menor_mortalidad()
+                explanation = [
+                    html.H3('🌱 Ciudades Más Seguras'),
+                    html.P('Las 10 ciudades con menor mortalidad general en 2019. '
+                          'Estos municipios pueden servir como referencia para buenas prácticas.')
+                ]
+            elif menu_value == 'table_top10_causes':
+                graph = build_tabla_top_causas()
+                explanation = [
+                    html.H3('📋 Principales Causas de Muerte'),
+                    html.P('Tabla con las 10 causas de muerte más frecuentes según la clasificación CIE-10. '
+                          'Permite identificar los principales problemas de salud pública.')
+                ]
+            elif menu_value == 'stacked_sex_dept':
+                graph = build_barras_apiladas_sexo_dpto()
+                explanation = [
+                    html.H3('� Análisis por Género'),
+                    html.P('Distribución de muertes por sexo en cada departamento. '
+                          'Las barras apiladas facilitan la comparación entre géneros y regiones.')
+                ]
+            elif menu_value == 'hist_age_groups':
+                graph = build_histograma_edad()
+                explanation = [
+                    html.H3('� Distribución por Edad'),
+                    html.P('Histograma que muestra la distribución de muertes por grupos etarios. '
+                          'Ayuda a identificar los grupos más vulnerables.')
+                ]
+            else:
+                graph = html.Div('Seleccione una opción del menú', className='text-center p-3')
+                explanation = []
+            
+            return graph, explanation
         except Exception as e:
-            return [html.H3('Error al renderizar'), html.Pre(str(e))]
+            error_msg = html.Div([
+                html.H4('⚠️ Error al cargar los datos', style={'color': '#f44336'}),
+                html.P(str(e)),
+                html.P('Verifica la conexión a la base de datos y que los datos estén cargados correctamente.',
+                       style={'fontSize': '12px', 'color': '#757575'})
+            ], style={'padding': '20px', 'background': '#ffebee', 'borderRadius': '8px'})
+            return error_msg, []
 
     return app
+

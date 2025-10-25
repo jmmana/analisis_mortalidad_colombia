@@ -1,0 +1,513 @@
+/* ============================================
+   VARIABLES Y FUENTES - Material Design
+   ============================================ */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Material+Icons&display=swap');
+
+:root {
+    /* Colores Material Design */
+    --primary-color: #1976d2;
+    --primary-dark: #1565c0;
+    --primary-light: #42a5f5;
+    --accent-color: #ff4081;
+    --success-color: #4caf50;
+    --warning-color: #ff9800;
+    --danger-color: #f44336;
+    
+    /* Colores de fondo */
+    --bg-primary: #fafafa;
+    --bg-secondary: #ffffff;
+    --bg-sidebar: #263238;
+    --bg-hover: rgba(255, 255, 255, 0.08);
+    --bg-active: rgba(255, 255, 255, 0.12);
+    
+    /* Colores de texto */
+    --text-primary: #212121;
+    --text-secondary: #757575;
+    --text-light: #ffffff;
+    --text-muted: rgba(255, 255, 255, 0.7);
+    
+    /* Sombras Material Design */
+    --shadow-1: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    --shadow-2: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+    --shadow-3: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+    --shadow-4: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+    
+    /* Dimensiones */
+    --sidebar-width: 320px;
+    --header-height: 64px;
+    --border-radius: 8px;
+    --border-radius-lg: 12px;
+    
+    /* Transiciones */
+    --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   RESET Y BASE
+   ============================================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================
+   LAYOUT PRINCIPAL
+   ============================================ */
+.container {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+/* ============================================
+   SIDEBAR - Menú Lateral Material Design
+   ============================================ */
+.sidebar {
+    width: var(--sidebar-width);
+    background: linear-gradient(180deg, var(--bg-sidebar) 0%, #1c262b 100%);
+    color: var(--text-light);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    box-shadow: var(--shadow-3);
+    z-index: 1000;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================
+   HEADER DEL SIDEBAR
+   ============================================ */
+.sidebar-header {
+    padding: 24px 20px;
+    background: rgba(0, 0, 0, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.brand-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.brand-icon {
+    font-size: 48px;
+    line-height: 1;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.brand-text {
+    flex: 1;
+}
+
+.brand-title {
+    font-size: 24px;
+    font-weight: 500;
+    margin: 0;
+    letter-spacing: 0.5px;
+    background: linear-gradient(135deg, #ffffff 0%, #b3e5fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.brand-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 4px 0 0 0;
+    font-weight: 300;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* ============================================
+   NAVEGACIÓN DEL SIDEBAR
+   ============================================ */
+.sidebar-nav {
+    flex: 1;
+    padding: 12px 8px;
+    overflow-y: auto;
+}
+
+.menu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* Ocultar el radio button nativo */
+.menu-radio {
+    display: none !important;
+}
+
+/* Estilo de cada item del menú */
+.menu-item {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    cursor: pointer;
+    border-radius: var(--border-radius);
+    transition: all var(--transition-fast);
+    position: relative;
+    overflow: hidden;
+}
+
+.menu-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--primary-light);
+    transform: scaleY(0);
+    transition: transform var(--transition-fast);
+}
+
+.menu-item:hover {
+    background: var(--bg-hover);
+}
+
+.menu-item:hover::before {
+    transform: scaleY(1);
+}
+
+/* Item activo (seleccionado) */
+.menu-radio:checked + .menu-item {
+    background: var(--bg-active);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.menu-radio:checked + .menu-item::before {
+    transform: scaleY(1);
+}
+
+.menu-radio:checked + .menu-item .menu-item-content {
+    color: var(--text-light);
+}
+
+.menu-radio:checked + .menu-item .menu-icon {
+    transform: scale(1.1);
+}
+
+/* Contenido del item */
+.menu-item-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 16px;
+    color: var(--text-muted);
+    transition: color var(--transition-fast);
+}
+
+.menu-icon {
+    font-size: 28px;
+    line-height: 1;
+    flex-shrink: 0;
+    transition: transform var(--transition-fast);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.menu-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.menu-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-light);
+    margin-bottom: 2px;
+    letter-spacing: 0.25px;
+}
+
+.menu-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 300;
+    line-height: 1.3;
+}
+
+/* ============================================
+   FOOTER DEL SIDEBAR
+   ============================================ */
+.sidebar-footer {
+    padding: 16px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-footer-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    border-radius: var(--border-radius);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.footer-icon {
+    font-size: 20px;
+}
+
+.footer-text {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+/* ============================================
+   CONTENIDO PRINCIPAL
+   ============================================ */
+.content {
+    margin-left: var(--sidebar-width);
+    flex: 1;
+    padding: 32px;
+    min-height: 100vh;
+    background-color: var(--bg-primary);
+    width: calc(100% - var(--sidebar-width));
+}
+
+/* ============================================
+   CARDS
+   ============================================ */
+.card {
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-lg);
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-1);
+    transition: box-shadow var(--transition-fast);
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card:hover {
+    box-shadow: var(--shadow-2);
+}
+
+.card.explanation {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8f5e9 100%);
+    border-left: 4px solid var(--success-color);
+}
+
+.card.explanation h3 {
+    color: var(--success-color);
+    font-weight: 500;
+    margin-bottom: 12px;
+}
+
+.card.explanation p {
+    color: var(--text-secondary);
+    line-height: 1.7;
+}
+
+/* ============================================
+   GRÁFICOS
+   ============================================ */
+.js-plotly-plot {
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+@media (max-width: 1024px) {
+    :root {
+        --sidebar-width: 280px;
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        position: relative;
+        height: auto;
+    }
+    
+    .content {
+        margin-left: 0;
+        width: 100%;
+        padding: 20px;
+    }
+    
+    .container {
+        flex-direction: column;
+    }
+    
+    .menu-item-content {
+        padding: 12px 16px;
+    }
+    
+    .menu-icon {
+        font-size: 24px;
+    }
+    
+    .menu-title {
+        font-size: 14px;
+    }
+    
+    .menu-desc {
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 480px) {
+    :root {
+        --sidebar-width: 100%;
+    }
+    
+    .sidebar-header {
+        padding: 16px;
+    }
+    
+    .brand-icon {
+        font-size: 36px;
+    }
+    
+    .brand-title {
+        font-size: 20px;
+    }
+    
+    .content {
+        padding: 16px;
+    }
+    
+    .card {
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+}
+
+/* ============================================
+   ANIMACIONES ADICIONALES
+   ============================================ */
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.sidebar {
+    animation: slideIn 0.4s ease-out;
+}
+
+/* Ripple effect en items del menú */
+.menu-item::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.menu-item:active::after {
+    width: 300px;
+    height: 300px;
+}
+
+/* ============================================
+   UTILIDADES
+   ============================================ */
+.text-center {
+    text-align: center;
+}
+
+.mt-2 {
+    margin-top: 16px;
+}
+
+.mb-2 {
+    margin-bottom: 16px;
+}
+
+.p-3 {
+    padding: 24px;
+}
+
+/* ============================================
+   ACCESIBILIDAD
+   ============================================ */
+.menu-item:focus-visible {
+    outline: 2px solid var(--primary-light);
+    outline-offset: 2px;
+}
+
+/* Modo de alto contraste */
+@media (prefers-contrast: high) {
+    :root {
+        --bg-hover: rgba(255, 255, 255, 0.15);
+        --bg-active: rgba(255, 255, 255, 0.25);
+    }
+}
+
+/* Reducir movimiento para usuarios con preferencia */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
