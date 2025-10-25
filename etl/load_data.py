@@ -11,22 +11,25 @@ from etl.validators import check_row_counts, check_columns
 
 
 def load_excel_to_db(path, table_name, engine):
+    print(f'Reading {path}...')
     df = pd.read_excel(path, engine='openpyxl')
-    df = normalize_columns(df)
-    df = parse_dates(df)
-    df = map_group_age(df)
+    print(f'Loaded {len(df)} rows, columns: {df.columns.tolist()[:5]}...')
+    # Normalizar nombres de columnas
+    df.columns = [col.strip().upper().replace(' ', '_') for col in df.columns]
     check_row_counts(df, min_rows=1)
+    print(f'Inserting into {table_name}...')
     # naive insert for demo
-    df.to_sql(table_name, engine, if_exists='append', index=False, chunksize=5000)
+    df.to_sql(table_name, engine, if_exists='replace', index=False, chunksize=1000)
+    print(f'✅ Completed: {len(df)} rows inserted into {table_name}')
 
 
 def main(args):
     engine = create_engine(args.db_url)
     data_dir = args.data_dir
     files = {
-        'muertes': os.path.join(data_dir, 'NoFetal2019.xlsx'),
-        'causas': os.path.join(data_dir, 'CodigosDeMuerte.xlsx'),
-        'divipola': os.path.join(data_dir, 'Divipola.xlsx')
+        'muertes': os.path.join(data_dir, 'Anexo1.NoFetal2019_CE_15-03-23.xlsx'),
+        'causas': os.path.join(data_dir, 'Anexo2.CodigosDeMuerte_CE_15-03-23.xlsx'),
+        'divipola': os.path.join(data_dir, 'Divipola_CE_.xlsx')
     }
     for table, path in files.items():
         if os.path.exists(path):
