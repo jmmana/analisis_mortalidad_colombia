@@ -1,0 +1,946 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Dashboard de Mortalidad - Colombia 2019</title>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Soft UI Dashboard CSS -->
+    <link id="pagestyle" href="{% static 'css/soft-ui-dashboard.css' %}" rel="stylesheet" />
+    
+    <!-- Plotly -->
+    <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .main-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(195deg, #42424a 0%, #191919 100%);
+            box-shadow: 0 4px 20px rgba(0,0,0,.14), 0 7px 10px -5px rgba(64,64,64,.4);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,.1);
+        }
+
+        .sidebar-header h4 {
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .sidebar-header p {
+            color: rgba(255,255,255,.6);
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .sidebar-menu {
+            padding: 15px 0;
+        }
+
+        .sidebar-menu ul {
+            list-style: none;
+        }
+
+        .sidebar-menu li {
+            margin: 5px 15px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .sidebar-menu a:hover {
+            background: rgba(255,255,255,.1);
+            transform: translateX(5px);
+        }
+
+        .sidebar-menu a.active {
+            background: linear-gradient(195deg, #ec407a 0%, #d81b60 100%);
+            box-shadow: 0 3px 6px rgba(233,30,99,.4);
+        }
+
+        .sidebar-menu a i {
+            width: 30px;
+            font-size: 14px;
+            text-align: center;
+            margin-right: 10px;
+        }
+
+        .upgrade-box {
+            margin: 20px 15px;
+            padding: 20px;
+            background: linear-gradient(195deg, #66BB6A 0%, #43A047 100%);
+            border-radius: 12px;
+            text-align: center;
+            color: white;
+        }
+
+        .upgrade-box h6 {
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .upgrade-box button {
+            background: rgba(255,255,255,.2);
+            border: 1px solid rgba(255,255,255,.4);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .upgrade-box button:hover {
+            background: rgba(255,255,255,.3);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            flex: 1;
+            padding: 30px;
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            color: white;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .page-header p {
+            color: rgba(255,255,255,.8);
+            font-size: 14px;
+        }
+
+        /* KPI Cards */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 14px rgba(0,0,0,.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #e91e63, #d81b60);
+        }
+
+        .kpi-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+        }
+
+        .kpi-icon.pink { background: linear-gradient(195deg, #EC407A 0%, #D81B60 100%); }
+        .kpi-icon.red { background: linear-gradient(195deg, #EF5350 0%, #E53935 100%); }
+        .kpi-icon.blue { background: linear-gradient(195deg, #42A5F5 0%, #1E88E5 100%); }
+        .kpi-icon.purple { background: linear-gradient(195deg, #AB47BC 0%, #8E24AA 100%); }
+
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #344767;
+            margin-bottom: 5px;
+        }
+
+        .kpi-label {
+            font-size: 14px;
+            color: #67748e;
+            font-weight: 600;
+        }
+
+        /* Chart Cards */
+        .chart-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 14px rgba(0,0,0,.1);
+        }
+
+        .chart-full {
+            grid-column: 1 / -1;
+        }
+
+        /* Table */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 14px rgba(0,0,0,.1);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table thead {
+            background: #f8f9fa;
+        }
+
+        table th {
+            padding: 12px;
+            text-align: left;
+            font-size: 12px;
+            color: #67748e;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        table td {
+            padding: 12px;
+            font-size: 14px;
+            color: #344767;
+            border-bottom: 1px solid #f0f2f5;
+        }
+
+        table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+            @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .chart-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Ocultar secciones */
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h4>🏥 MORTALIDAD</h4>
+                <p>Dashboard Colombia 2019</p>
+            </div>
+
+            <nav class="sidebar-menu">
+                <ul>
+                    <li>
+                        <a href="#" class="menu-item active" data-section="dashboard">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="menu-item" data-section="mapas">
+                            <i class="fas fa-map-marked-alt"></i>
+                            <span>Mapa Interactivo</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="menu-item" data-section="causas">
+                            <i class="fas fa-hospital"></i>
+                            <span>Causas de Muerte</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="menu-item" data-section="demografia">
+                            <i class="fas fa-users"></i>
+                            <span>Demografía</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="menu-item" data-section="temporal">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Análisis Temporal</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="menu-item" data-section="tabla">
+                            <i class="fas fa-table"></i>
+                            <span>Datos Detallados</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1 id="page-title">Dashboard de Mortalidad</h1>
+                <p id="page-subtitle">Análisis estadístico de mortalidad en Colombia - Año 2019</p>
+            </div>
+
+            <!-- DASHBOARD SECTION -->
+            <div id="dashboard" class="section active">
+            <!-- KPIs -->
+            <div class="kpi-row">
+                <div class="kpi-card">
+                    <div class="kpi-card-header">
+                        <div>
+                            <div class="kpi-value">{{ total_muertes|floatformat:"0g"|intcomma }}</div>
+                            <div class="kpi-label">Total Muertes</div>
+                        </div>
+                        <div class="kpi-icon pink">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-card-header">
+                        <div>
+                            <div class="kpi-value">{{ muertes_hombres|floatformat:"0g"|intcomma }}</div>
+                            <div class="kpi-label">Hombres</div>
+                        </div>
+                        <div class="kpi-icon blue">
+                            <i class="fas fa-male"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-card-header">
+                        <div>
+                            <div class="kpi-value">{{ muertes_mujeres|floatformat:"0g"|intcomma }}</div>
+                            <div class="kpi-label">Mujeres</div>
+                        </div>
+                        <div class="kpi-icon purple">
+                            <i class="fas fa-female"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-card-header">
+                        <div>
+                            <div class="kpi-value">{{ muertes_indeterminado|floatformat:"0g"|intcomma }}</div>
+                            <div class="kpi-label">Indeterminado</div>
+                        </div>
+                        <div class="kpi-icon" style="background: linear-gradient(195deg, #FFA726 0%, #FB8C00 100%);">
+                            <i class="fas fa-question"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 1 -->
+            <div class="chart-row">
+                <div class="chart-card chart-full">
+                    {{ mapa_html|safe }}
+                </div>
+            </div>
+
+            <!-- Charts Row 2 -->
+            <div class="chart-row">
+                <div class="chart-card">
+                    {{ linea_html|safe }}
+                </div>
+                <div class="chart-card">
+                    {{ top5_html|safe }}
+                </div>
+            </div>
+            </div>
+            <!-- FIN DASHBOARD SECTION -->
+
+            <!-- MAPAS SECTION -->
+            <div id="mapas" class="section">
+                <!-- Filtros -->
+                <div class="chart-card" style="margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 20px; color: #344767;">
+                        <i class="fas fa-filter"></i> Filtros Inteligentes
+                    </h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: end;">
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; color: #344767; font-weight: 600;">
+                                <i class="fas fa-venus-mars"></i> Sexo
+                            </label>
+                            <select id="sexo-filter" style="width: 100%; padding: 10px; border: 1px solid #d2d6da; border-radius: 8px; font-size: 14px; color: #344767; background: white;">
+                                <option value="TODOS">Todos</option>
+                                <option value="M">Masculino</option>
+                                <option value="F">Femenino</option>
+                                <option value="I">Indeterminado</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; color: #344767; font-weight: 600;">
+                                <i class="fas fa-heartbeat"></i> Mortalidad (CIE-10)
+                            </label>
+                            <select id="causa-filter" style="width: 100%; padding: 10px; border: 1px solid #d2d6da; border-radius: 8px; font-size: 14px; color: #344767; background: white;">
+                                <option value="TODAS">Todas las causas</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estadísticas de Análisis IA -->
+                <div class="kpi-row" style="margin-bottom: 20px;">
+                    <div class="kpi-card">
+                        <div class="kpi-card-header">
+                            <div>
+                                <div class="kpi-value" id="stat-total-muertes">-</div>
+                                <div class="kpi-label">Total Muertes</div>
+                            </div>
+                            <div class="kpi-icon" style="background: linear-gradient(195deg, #667eea 0%, #764ba2 100%);">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-card-header">
+                            <div>
+                                <div class="kpi-value" id="stat-clusters">-</div>
+                                <div class="kpi-label">Clústeres Detectados</div>
+                            </div>
+                            <div class="kpi-icon" style="background: linear-gradient(195deg, #42A5F5 0%, #1976D2 100%);">
+                                <i class="fas fa-project-diagram"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-card-header">
+                            <div>
+                                <div class="kpi-value" id="stat-alto-riesgo">-</div>
+                                <div class="kpi-label">Zonas Alto Riesgo</div>
+                            </div>
+                            <div class="kpi-icon" style="background: linear-gradient(195deg, #FF5722 0%, #D32F2F 100%);">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-card-header">
+                            <div>
+                                <div class="kpi-value" id="stat-tasa-promedio">-</div>
+                                <div class="kpi-label">Tasa Promedio (x1000)</div>
+                            </div>
+                            <div class="kpi-icon" style="background: linear-gradient(195deg, #66BB6A 0%, #388E3C 100%);">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mapa Interactivo Avanzado -->
+                <div class="chart-card chart-full">
+                    <h3 style="margin-bottom: 15px; color: #344767;">
+                        <i class="fas fa-brain"></i> Mapa Inteligente con Análisis de Clústeres (IA)
+                    </h3>
+                    <div style="background: #E3F2FD; border-left: 4px solid #2196F3; padding: 12px; margin-bottom: 15px; border-radius: 6px;">
+                        <p style="margin: 0; color: #1565C0; font-size: 13px;">
+                            <i class="fas fa-info-circle"></i> <strong>Análisis Inteligente:</strong> 
+                            Utilizando algoritmo DBSCAN para detectar zonas de alta mortalidad. 
+                            🔴 = Clúster de Alto Riesgo | 🟢 = Zona Normal
+                        </p>
+                    </div>
+                    <div id="mapa-container" style="min-height: 600px;">
+                        <div id="loading-mapa" style="text-align: center; padding: 50px;">
+                            <i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #667eea;"></i>
+                            <p style="margin-top: 15px; color: #67748e;">Analizando datos y detectando clústeres...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla de datos -->
+                <div class="chart-card chart-full" style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 20px; color: #344767;">
+                        <i class="fas fa-table"></i> Muertes por Municipio
+                    </h3>
+                    <div style="overflow-x: auto;">
+                        <table id="mapa-table" style="width: 100%; border-collapse: collapse;">
+                            <thead style="background: #f8f9fa;">
+                                <tr>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6; color: #344767; font-weight: 600;">#</th>
+                                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6; color: #344767; font-weight: 600;">Departamento & Estado</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid #dee2e6; color: #344767; font-weight: 600;">Total Muertes</th>
+                                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid #dee2e6; color: #344767; font-weight: 600;">Tasa (x1000)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mapa-table-body">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; padding: 20px; color: #67748e;">
+                                        <i class="fas fa-spinner fa-spin"></i> Analizando datos...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CAUSAS SECTION -->
+            <div id="causas" class="section">
+                <div class="chart-row">
+                    <div class="chart-card chart-full">
+                        {{ top10_causas_html|safe }}
+                    </div>
+                </div>
+                <div class="kpi-row" style="margin-top: 20px;">
+                    <div class="kpi-card">
+                        <div class="kpi-card-header">
+                            <div>
+                                <div class="kpi-value">{{ homicidios|default:"0" }}</div>
+                                <div class="kpi-label">Muertes Violentas</div>
+                            </div>
+                            <div class="kpi-icon red">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DEMOGRAFIA SECTION -->
+            <div id="demografia" class="section">
+                <div class="chart-row">
+                    <div class="chart-card">
+                        {{ sexo_html|safe }}
+                    </div>
+                    <div class="chart-card">
+                        {{ edad_html|safe }}
+                    </div>
+                </div>
+                <div class="kpi-row" style="margin-top: 20px;">
+                    <div class="kpi-card">
+                        <div class="kpi-card-header">
+                            <div>
+                                <div class="kpi-value">{{ muertes_hombres|default:"0" }}</div>
+                                <div class="kpi-label">Hombres</div>
+                            </div>
+                            <div class="kpi-icon blue">
+                                <i class="fas fa-male"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-card-header">
+                            <div>
+                                <div class="kpi-value">{{ muertes_mujeres|default:"0" }}</div>
+                                <div class="kpi-label">Mujeres</div>
+                            </div>
+                            <div class="kpi-icon purple">
+                                <i class="fas fa-female"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TEMPORAL SECTION -->
+            <div id="temporal" class="section">
+                <div class="chart-card chart-full">
+                    {{ linea_html|safe }}
+                </div>
+            </div>
+
+            <!-- TABLA SECTION -->
+            <div id="tabla" class="section">
+            <div class="table-container">
+                <h4 style="margin-bottom: 20px; color: #344767; font-size: 18px;">Últimas Muertes Registradas</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Departamento</th>
+                            <th>Municipio</th>
+                            <th>Causa</th>
+                            <th>Sexo</th>
+                            <th>Edad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for muerte in muertes_recientes %}
+                        <tr>
+                            <td>{{ muerte.fecha }}</td>
+                            <td>{{ muerte.departamento }}</td>
+                            <td>{{ muerte.municipio }}</td>
+                            <td>{{ muerte.codigo_causa }}</td>
+                            <td>{{ muerte.sexo }}</td>
+                            <td>{{ muerte.edad }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            </div>
+            <!-- FIN TABLA SECTION -->
+        </main>
+    </div>
+
+    <script>
+        // JavaScript para navegación del menú
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuItems = document.querySelectorAll('.menu-item');
+            const sections = document.querySelectorAll('.section');
+            const pageTitle = document.getElementById('page-title');
+            const pageSubtitle = document.getElementById('page-subtitle');
+
+            const titles = {
+                'dashboard': {
+                    title: 'Dashboard de Mortalidad',
+                    subtitle: 'Análisis estadístico de mortalidad en Colombia - Año 2019'
+                },
+                'mapas': {
+                    title: 'Mapa Interactivo',
+                    subtitle: 'Visualización geográfica de muertes por departamento'
+                },
+                'causas': {
+                    title: 'Causas de Muerte',
+                    subtitle: 'Principales causas de mortalidad en Colombia 2019'
+                },
+                'demografia': {
+                    title: 'Análisis Demográfico',
+                    subtitle: 'Distribución de muertes por sexo y grupos de edad'
+                },
+                'temporal': {
+                    title: 'Análisis Temporal',
+                    subtitle: 'Tendencias de mortalidad a lo largo del año 2019'
+                },
+                'tabla': {
+                    title: 'Datos Detallados',
+                    subtitle: 'Últimas muertes registradas en el sistema'
+                }
+            };
+
+            menuItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remover clase active de todos los items
+                    menuItems.forEach(mi => mi.classList.remove('active'));
+                    
+                    // Agregar clase active al item clickeado
+                    this.classList.add('active');
+                    
+                    // Obtener la sección a mostrar
+                    const sectionId = this.getAttribute('data-section');
+                    
+                    // Ocultar todas las secciones
+                    sections.forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    
+                    // Mostrar la sección seleccionada
+                    const targetSection = document.getElementById(sectionId);
+                    if (targetSection) {
+                        targetSection.classList.add('active');
+                        
+                        // Actualizar título y subtítulo
+                        if (titles[sectionId]) {
+                            pageTitle.textContent = titles[sectionId].title;
+                            pageSubtitle.textContent = titles[sectionId].subtitle;
+                        }
+                        
+                        // Scroll suave hacia arriba
+                        window.scrollTo({
+                            top: 0,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+
+            // Cargar causas de muerte
+            loadCausas();
+            
+            // Cargar datos del mapa inicialmente
+            loadMapaData();
+
+            // Event listeners para filtros
+            document.getElementById('sexo-filter').addEventListener('change', function() {
+                loadMapaData();
+            });
+
+            document.getElementById('causa-filter').addEventListener('change', function() {
+                loadMapaData();
+            });
+        });
+
+        // Función para cargar las causas en el select
+        async function loadCausas() {
+            try {
+                const response = await fetch('/api/causas/');
+                const data = await response.json();
+                
+                const causaSelect = document.getElementById('causa-filter');
+                
+                data.causas.forEach(causa => {
+                    const option = document.createElement('option');
+                    option.value = causa.codigo;
+                    option.textContent = causa.descripcion;
+                    causaSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error cargando causas:', error);
+            }
+        }
+
+        // Función para cargar datos del mapa con filtros y análisis IA
+        async function loadMapaData() {
+            const sexo = document.getElementById('sexo-filter').value;
+            const causa = document.getElementById('causa-filter').value;
+            
+            // Mostrar loading
+            document.getElementById('mapa-container').innerHTML = `
+                <div style="text-align: center; padding: 50px;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #667eea;"></i>
+                    <p style="margin-top: 15px; color: #67748e;">Analizando datos y detectando clústeres...</p>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch(`/api/mapa-data/?sexo=${sexo}&causa=${causa}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                console.log('Datos recibidos:', {
+                    estadisticas: result.estadisticas,
+                    dataLength: result.data ? result.data.length : 0
+                });
+                
+                // Actualizar estadísticas KPI
+                if (result.estadisticas) {
+                    updateEstadisticas(result.estadisticas);
+                }
+                
+                // USAR PLOTLY.NEWPLOT DIRECTAMENTE - MISMO CÓDIGO QUE TEST
+                if (result.data && result.data.length > 0) {
+                    const container = document.getElementById('mapa-container');
+                    container.innerHTML = '<div id="mapa_avanzado" style="width:100%; height:700px;"></div>';
+                    
+                    // Pequeño delay para asegurar que el contenedor esté renderizado
+                    setTimeout(() => {
+                        // Crear el mapa directamente con Plotly (IGUAL QUE TEST)
+                        const data = [{
+                            type: 'scattermapbox',
+                            lat: result.data.map(d => d.lat),
+                            lon: result.data.map(d => d.lon),
+                            mode: 'markers',
+                            marker: {
+                                size: result.data.map(d => Math.sqrt(d.total_muertes) / 5),
+                                color: result.data.map(d => d.total_muertes),
+                                colorscale: 'YlOrRd',
+                                showscale: true,
+                                colorbar: {
+                                    title: 'Muertes'
+                                },
+                                opacity: 0.8
+                            },
+                            text: result.data.map(d => `<b>${d.nombre_depto}</b><br>Muertes: ${d.total_muertes.toLocaleString()}`),
+                            hoverinfo: 'text'
+                        }];
+
+                        const layout = {
+                            mapbox: {
+                                style: 'open-street-map',
+                                center: { lat: 4.0, lon: -73.0 },
+                                zoom: 5
+                            },
+                            margin: { t: 0, l: 0, r: 0, b: 0 },
+                            height: 700,
+                            autosize: true
+                        };
+
+                        const config = {
+                            responsive: true
+                        };
+
+                        Plotly.newPlot('mapa_avanzado', data, layout, config);
+                        
+                        // Forzar centrado y resize después de crear el mapa
+                        setTimeout(() => {
+                            // Recentrar el mapa
+                            Plotly.relayout('mapa_avanzado', {
+                                'mapbox.center': { lat: 4.0, lon: -73.0 },
+                                'mapbox.zoom': 5
+                            });
+                            console.log('✓ Mapa renderizado y centrado con', result.data.length, 'departamentos');
+                        }, 100);
+                        
+                        setTimeout(() => {
+                            Plotly.Plots.resize('mapa_avanzado');
+                        }, 200);
+                    }, 50);
+                } else {
+                    document.getElementById('mapa-container').innerHTML = 
+                        '<div style="text-align:center; padding:50px; color:red;">No se recibieron datos</div>';
+                }
+                
+                // Actualizar tabla
+                if (result.data) {
+                    updateMapaTable(result.data);
+                }
+                
+            } catch (error) {
+                console.error('Error cargando datos del mapa:', error);
+                document.getElementById('mapa-container').innerHTML = 
+                    `<div style="text-align: center; padding: 50px; color: #e91e63;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Error al cargar el mapa</p>
+                        <p style="font-size: 12px; color: #67748e;">${error.message}</p>
+                    </div>`;
+            }
+        }
+
+        // Función para actualizar estadísticas KPI
+        function updateEstadisticas(stats) {
+            if (!stats) {
+                console.error('No se recibieron estadísticas');
+                return;
+            }
+            
+            // Actualizar con valores seguros
+            const totalMuertes = stats.total_muertes || 0;
+            const clustersDetectados = stats.clusters_detectados || 0;
+            const altoRiesgo = stats.departamentos_alto_riesgo || 0;
+            const tasaPromedio = stats.tasa_promedio || 0;
+            
+            document.getElementById('stat-total-muertes').textContent = totalMuertes.toLocaleString();
+            document.getElementById('stat-clusters').textContent = clustersDetectados;
+            document.getElementById('stat-alto-riesgo').textContent = altoRiesgo;
+            document.getElementById('stat-tasa-promedio').textContent = tasaPromedio.toFixed(2);
+        }
+
+        // Función para actualizar la tabla
+        function updateMapaTable(data) {
+            const tbody = document.getElementById('mapa-table-body');
+            tbody.innerHTML = '';
+            
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #67748e;">No hay datos disponibles</td></tr>';
+                return;
+            }
+            
+            // Mostrar top 20 departamentos (sin scroll)
+            const topData = data.slice(0, 20);
+            
+            topData.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.style.borderBottom = '1px solid #f0f2f5';
+                
+                // Agregar indicador de cluster con valores seguros
+                const riesgoIcon = item.es_cluster_alto ? '🔴' : '🟢';
+                const riesgoText = item.es_cluster_alto ? 'Alto Riesgo' : 'Normal';
+                const riesgoColor = item.es_cluster_alto ? '#E65100' : '#66BB6A';
+                
+                const nombreDepto = item.nombre_depto || 'Desconocido';
+                const totalMuertes = item.total_muertes || 0;
+                const tasaMortalidad = item.tasa_mortalidad || 0;
+                
+                row.innerHTML = `
+                    <td style="padding: 10px; color: #67748e;">${index + 1}</td>
+                    <td style="padding: 10px; color: #344767;">
+                        ${riesgoIcon} ${nombreDepto}
+                        <div style="font-size: 11px; color: ${riesgoColor}; font-weight: 600; margin-top: 2px;">
+                            ${riesgoText}
+                        </div>
+                    </td>
+                    <td style="padding: 10px; text-align: right; color: #e91e63; font-weight: 600;">
+                        ${totalMuertes.toLocaleString()}
+                    </td>
+                    <td style="padding: 10px; text-align: right; color: #67748e;">
+                        ${tasaMortalidad.toFixed(2)}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    </script>
+</body>
+</html>

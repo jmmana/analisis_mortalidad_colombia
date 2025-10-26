@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: mortalidad_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: mortalidad_db
+      MYSQL_USER: mortalidad_user
+      MYSQL_PASSWORD: mortalidad_pass
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./config/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - mortalidad_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  django_app:
+    build:
+      context: .
+      dockerfile: Dockerfile.django
+    container_name: mortalidad_django_app
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=mortalidad_db
+      - DB_USER=mortalidad_user
+      - DB_PASSWORD=mortalidad_pass
+      - DEBUG=True
+      - SECRET_KEY=django-insecure-dev-key-change-in-production
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - mortalidad_network
+    volumes:
+      - ./django_app:/app
+      - static_volume:/app/staticfiles
+
+volumes:
+  mysql_data:
+  static_volume:
+
+networks:
+  mortalidad_network:
+    driver: bridge

@@ -3,109 +3,98 @@ import dash_bootstrap_components as dbc
 
 
 def sidebar():
-    """Menú lateral estilo Material Design"""
-    menu_items = [
-        {
-            "icon": "🗺️",
-            "label": "Mapa Departamental",
-            "value": "map",
-            "description": "Visualización geográfica"
-        },
-        {
-            "icon": "📈",
-            "label": "Tendencia Mensual",
-            "value": "lines",
-            "description": "Evolución temporal"
-        },
-        {
-            "icon": "⚠️",
-            "label": "Ciudades Violentas",
-            "value": "bars_top5",
-            "description": "Top 5 homicidios"
-        },
-        {
-            "icon": "🌱",
-            "label": "Menor Mortalidad",
-            "value": "pie_bottom10",
-            "description": "10 ciudades seguras"
-        },
-        {
-            "icon": "📋",
-            "label": "Principales Causas",
-            "value": "table_top10_causes",
-            "description": "Top 10 CIE-10"
-        },
-        {
-            "icon": "👥",
-            "label": "Análisis por Sexo",
-            "value": "stacked_sex_dept",
-            "description": "Distribución por género"
-        },
-        {
-            "icon": "📊",
-            "label": "Grupos Etarios",
-            "value": "hist_age_groups",
-            "description": "Distribución por edad"
-        },
-    ]
+    """Menú lateral estilo Material Design - EXACTO a la referencia"""
     
     return html.Div(
         id="sidebar",
         children=[
-            # Header del menú
-            html.Div(
-                children=[
-                    html.Div(
-                        children=[
-                            html.Div("💚", className="brand-icon"),
-                            html.Div([
-                                html.H2("Mortalidad COL", className="brand-title"),
-                                html.P("Colombia 2019", className="brand-subtitle"),
-                            ], className="brand-text")
-                        ],
-                        className="brand-container"
-                    ),
+            # Header con logo
+            html.Div([
+                html.I(className="fas fa-chart-pie sidebar-brand-icon"),
+                html.Span("Mortalidad COL 2", className="sidebar-brand-text"),
+            ], className="sidebar-brand"),
+            
+            html.Hr(className="sidebar-divider"),
+            
+            # Items del menú principal
+            dcc.RadioItems(
+                id="menu",
+                options=[
+                    {
+                        "label": html.Div([
+                            html.I(className="fas fa-map-marked-alt menu-icon-fa"),
+                            html.Span("Mapa Departamental")
+                        ], className="menu-item-label"),
+                        "value": "map"
+                    },
+                    {
+                        "label": html.Div([
+                            html.I(className="fas fa-chart-line menu-icon-fa"),
+                            html.Span("Tendencia Mensual")
+                        ], className="menu-item-label"),
+                        "value": "lines"
+                    },
+                    {
+                        "label": html.Div([
+                            html.I(className="fas fa-exclamation-triangle menu-icon-fa"),
+                            html.Span("Ciudades Violentas")
+                        ], className="menu-item-label"),
+                        "value": "bars_top5"
+                    },
+                    {
+                        "label": html.Div([
+                            html.I(className="fas fa-shield-alt menu-icon-fa"),
+                            html.Span("Ciudades Seguras")
+                        ], className="menu-item-label"),
+                        "value": "pie_bottom10"
+                    },
+                    {
+                        "label": html.Div([
+                            html.I(className="fas fa-table menu-icon-fa"),
+                            html.Span("Principales Causas")
+                        ], className="menu-item-label"),
+                        "value": "table_top10_causes"
+                    },
+                    {
+                        "label": html.Div([
+                            html.I(className="fas fa-venus-mars menu-icon-fa"),
+                            html.Span("Análisis por Sexo")
+                        ], className="menu-item-label"),
+                        "value": "stacked_sex_dept"
+                    },
+                    {
+                        "label": html.Div([
+                            html.I(className="fas fa-users menu-icon-fa"),
+                            html.Span("Grupos Etarios")
+                        ], className="menu-item-label"),
+                        "value": "hist_age_groups"
+                    },
                 ],
-                className="sidebar-header"
+                value="map",
+                className="sidebar-menu",
+                inputClassName="menu-radio",
+                labelClassName="sidebar-menu-item",
             ),
             
-            # Menú de navegación
-            html.Div(
-                children=[
-                    dcc.RadioItems(
-                        id="menu",
-                        options=[
-                            {
-                                "label": html.Div([
-                                    html.Div(item["icon"], className="menu-icon"),
-                                    html.Div([
-                                        html.Div(item["label"], className="menu-title"),
-                                        html.Div(item["description"], className="menu-desc"),
-                                    ], className="menu-text")
-                                ], className="menu-item-content"),
-                                "value": item["value"]
-                            }
-                            for item in menu_items
-                        ],
-                        value="map",
-                        className="menu-list",
-                        inputClassName="menu-radio",
-                        labelClassName="menu-item",
-                    ),
-                ],
-                className="sidebar-nav"
-            ),
+            html.Hr(className="sidebar-divider"),
             
-            # Footer del menú
-            html.Div(
-                children=[
-                    html.Div([
-                        html.Span("📊", className="footer-icon"),
-                        html.Span("Datos DANE 2019", className="footer-text"),
-                    ], className="sidebar-footer-item"),
-                ],
-                className="sidebar-footer"
-            ),
+            # Sección de páginas de cuenta
+            html.Div([
+                html.Div("ANÁLISIS AVANZADO", className="sidebar-heading"),
+                html.A([
+                    html.I(className="fas fa-cog menu-icon-fa"),
+                    html.Span("Configuración")
+                ], href="#", className="sidebar-link"),
+                html.A([
+                    html.I(className="fas fa-download menu-icon-fa"),
+                    html.Span("Exportar Datos")
+                ], href="#", className="sidebar-link"),
+            ], className="sidebar-section"),
+            
+            # Botón de upgrade al final
+            html.Div([
+                html.A("UPGRADE TO PRO", href="#", className="btn-upgrade")
+            ], className="sidebar-footer-upgrade"),
         ],
         className="sidebar",
     )

@@ -1,0 +1,8 @@
+Django>=4.2
+mysqlclient>=2.2.0
+django-environ>=0.11.0
+pandas>=2.0.0
+plotly>=5.14.0
+Pillow>=10.0.0
+gunicorn>=21.2.0
+whitenoise>=6.5.0
