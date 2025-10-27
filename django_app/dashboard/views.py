@@ -339,3 +339,7 @@ def test_mapa_page(request):
     """Página HTML de prueba para el mapa"""
     return render(request, 'dashboard/test_mapa.html')
 
+
+def debug_mapa_page(request):
+    """Página debug con código dashboard"""
+    return render(request, 'dashboard/debug_mapa.html')
