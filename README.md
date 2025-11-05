@@ -110,6 +110,9 @@ Este proyecto usa la licencia MIT (añadir `LICENSE` si aplica).
 
 ---
 
-Si quieres, puedo:
-- Añadir badges reales (CI/coverage) y configurar GitHub Actions.
-- Crear `.gitignore` y otros artefactos (docker-compose, schema.sql) en el repo.
+<img width="608" height="338" alt="image" src="https://github.com/user-attachments/assets/6db351bb-0428-47bf-be69-03d74afa8f7b" />
+<img width="622" height="344" alt="image" src="https://github.com/user-attachments/assets/449b08af-152e-4605-b106-1b99ed897da9" />
+<img width="631" height="340" alt="image" src="https://github.com/user-attachments/assets/12497c5f-a692-4876-8021-f2d34c34ae45" />
+
+
+
